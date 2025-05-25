@@ -1,0 +1,254 @@
+/* Base styles */
+* { 
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body, html {
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    background: #000;
+}
+
+/* Video background setup */
+.video-background {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1;
+    overflow: hidden;
+    background: #000;
+}
+
+.video-container {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    overflow: hidden;
+    background: #000;
+}
+
+.aspect-ratio-box {
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+#player {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+/* Fill mode styles - ensures complete coverage */
+#player.fill {
+    position: absolute;
+    min-width: 100vw;
+    min-height: 100vh;
+    width: auto;
+    height: auto;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(1.5); /* Increased scale for better coverage */
+    object-fit: cover;
+}
+
+/* Contain mode styles */
+#player.contain {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    object-fit: contain;
+}
+
+/* Ensure iframe takes full size of parent */
+#player iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Hide YouTube chrome elements */
+.ytp-chrome-top, 
+.ytp-chrome-bottom, 
+.ytp-gradient-top, 
+.ytp-gradient-bottom {
+    display: none !important;
+}
+
+/* Overlay styling */
+#overlay {
+    position: fixed;
+    left: 30px;
+    color: white;
+    font-family: 'Courier New', monospace;
+    font-size: 20px;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 10px 15px;
+    border-radius: 8px;
+    max-width: 90%;
+    z-index: 100;
+    pointer-events: none;
+    transition: bottom 0.3s ease, top 0.3s ease;
+}
+
+#overlay.position-bottom {
+    bottom: 30px;
+    top: auto;
+}
+
+#overlay.position-top {
+    top: 30px;
+    bottom: auto;
+}
+
+/* Control panel styling */
+#controlPanel {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    font-family: Arial, sans-serif;
+    z-index: 100;
+    max-width: 300px;
+    transition: transform 0.3s, opacity 0.5s ease-in-out;
+}
+
+#controlPanel.hidden {
+    transform: translateX(350px);
+    visibility: hidden;
+}
+
+#controlPanel.fade {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#controlToggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 28px;
+    z-index: 101;
+    transition: opacity 0.5s ease-in-out;
+}
+
+/* Control panel elements */
+.control-row {
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.control-row label {
+    flex: 1;
+}
+
+/* Form elements styling */
+input[type="text"],
+input[type="number"],
+select {
+    background: #333;
+    border: 1px solid #555;
+    color: white;
+    padding: 8px;
+    border-radius: 4px;
+    width: 150px;
+    transition: border-color 0.3s ease;
+}
+
+input[type="range"] {
+    flex: 1;
+}
+
+button {
+    background: #555;
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 10px;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background: #666;
+}
+
+/* Share URL input */
+#shareUrl {
+    width: 100%;
+    margin-top: 10px;
+    font-size: 12px;
+    color: #aaa;
+    background: #222;
+}
+
+/* Change indicators */
+.unsaved-changes {
+    color: #ff4444;
+    font-size: 14px;
+    margin-top: 5px;
+    display: none;
+    font-weight: bold;
+}
+
+input.changed,
+select.changed {
+    border-color: #ff4444;
+    box-shadow: 0 0 5px rgba(255, 68, 68, 0.3);
+}
+
+input[type="checkbox"].changed + label::after {
+    content: " ★";
+    color: #ff4444;
+}
+
+/* Volume message */
+#volumeMessage {
+    position: fixed;
+    top: 80px;
+    left: 20px;
+    padding: 10px 15px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    border-radius: 8px;
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    z-index: 200;
+    cursor: pointer;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}

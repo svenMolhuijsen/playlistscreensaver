@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple YouTube Player</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            overflow: hidden;
+        }
+        
+        #player {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1001;
+            font-family: Arial, sans-serif;
+        }
+        
+        .gear-icon {
+            background: rgba(0,0,0,0.8);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            margin-left: auto;
+            transition: all 0.3s ease;
+        }
+        
+        .gear-icon:hover {
+            background: rgba(0,0,0,0.9);
+            transform: rotate(90deg);
+        }
+        
+        .control-panel {
+            background: linear-gradient(135deg, rgba(20,20,20,0.95), rgba(40,40,40,0.95));
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            width: 320px;
+            display: none;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        
+        .control-panel.show {
+            display: block;
+        }
+        
+        .control-section {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .control-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .section-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #ff6b6b;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .checkbox-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+        
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .volume-icon {
+            font-size: 16px;
+            width: 20px;
+        }
+        
+        input[type="range"] {
+            flex: 1;
+            height: 6px;
+            background: #333;
+            outline: none;
+            border-radius: 3px;
+            margin: 0;
+            padding: 0;
+            width: auto;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #ff6b6b;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: #ff6b6b;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .volume-value {
+            min-width: 25px;
+            text-align: center;
+            font-size: 12px;
+            color: #ccc;
+        }
+        
+        input[type="text"], button {
+            margin: 8px 0;
+            padding: 10px;
+            width: 100%;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.05);
+            color: white;
+            font-size: 13px;
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #ff6b6b;
+            background: rgba(255,255,255,0.1);
+        }
+        
+        button {
+            background: linear-gradient(135deg, #ff6b6b, #ff5252);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 12px;
+        }
+        
+        button:hover {
+            background: linear-gradient(135deg, #ff5252, #ff4444);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255,107,107,0.3);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .button-group button {
+            flex: 1;
+        }
+        
+        #urlOutput {
+            background: rgba(0,0,0,0.3);
+            color: #ccc;
+            border: 1px solid rgba(255,255,255,0.2);
+            font-family: monospace;
+            font-size: 11px;
+        }
+        
+        label {
+            display: block;
+            margin-top: 8px;
+            margin-bottom: 4px;
+            font-size: 12px;
+            color: #ddd;
+            font-weight: 500;
+        }
+        
+        /* Typewriter overlay styles */
+        .title-overlay {
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 999;
+            max-width: 80vw;
+            word-wrap: break-word;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: none;
+        }
+        
+        .title-overlay.top {
+            top: 40px;
+        }
+        
+        .title-overlay.bottom {
+            bottom: 40px;
+        }
+        
+        .title-overlay.show {
+            display: block;
+        }
+        
+        .typewriter-cursor {
+            display: inline-block;
+            background-color: white;
+            margin-left: 2px;
+            width: 2px;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .position-select {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .position-option {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+        }
+        
+        .position-option input[type="radio"] {
+            width: auto;
+            margin: 0;
+        }
+        
+        /* Dimming overlay */
+        .dimming-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0);
+            z-index: 500;
+            pointer-events: auto;
+            transition: background-color 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div id="player"></div>
+    
+    <!-- Dimming overlay -->
+    <div id="dimmingOverlay" class="dimming-overlay"></div>
+    
+    <!-- Typewriter title overlay -->
+    <div id="titleOverlay" class="title-overlay top">
+        <span id="titleText"></span><span class="typewriter-cursor" id="cursor"></span>
+    </div>
+    
+    <div class="controls">
+        <div class="control-panel" id="controlPanel">
+            <div class="control-section">
+                <div class="section-title">Settings</div>
+                <div class="checkbox-container">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="autoplayToggle" checked>
+                        <label for="autoplayToggle">Autoplay</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="randomToggle" checked>
+                        <label for="randomToggle">Shuffle</label>
+                    </div>
+                </div>
+                <div class="volume-container">
+                    <span class="volume-icon">🔊</span>
+                    <input type="range" id="volumeSlider" min="0" max="100" value="0">
+                    <span class="volume-value" id="volumeValue">0</span>
+                </div>
+                <div class="volume-container">
+                    <span class="volume-icon">🌑</span>
+                    <input type="range" id="dimmingSlider" min="0" max="80" value="0">
+                    <span class="volume-value" id="dimmingValue">0%</span>
+                </div>
+                <div class="position-select">
+                    <div class="position-option">
+                        <input type="radio" name="titlePosition" value="disabled" id="titleDisabled">
+                        <label for="titleDisabled">No Title</label>
+                    </div>
+                    <div class="position-option">
+                        <input type="radio" name="titlePosition" value="top" id="titleTop" checked>
+                        <label for="titleTop">Top</label>
+                    </div>
+                    <div class="position-option">
+                        <input type="radio" name="titlePosition" value="bottom" id="titleBottom">
+                        <label for="titleBottom">Bottom</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <div class="section-title">Content</div>
+                <div>
+                    <label for="playlistId">Playlist ID</label>
+                    <input type="text" id="playlistId" value="PLGc7GQUGUD5shfN9PzT7ejV9vK8HAoIKA">
+                </div>
+                <div>
+                    <label for="videoId">Video ID</label>
+                    <input type="text" id="videoId" placeholder="voor single video">
+                </div>
+                <div class="button-group">
+                    <button onclick="loadPlaylist()">Load Playlist</button>
+                    <button onclick="loadVideo()">Load Video</button>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <div class="section-title">Share</div>
+                <div>
+                    <label for="urlOutput">Generated URL</label>
+                    <input type="text" id="urlOutput" readonly>
+                </div>
+                <button onclick="copyUrl()">Copy URL</button>
+            </div>
+        </div>
+        <div class="gear-icon" onclick="toggleControls()">⚙️</div>
+    </div>
+
+    <script>
+        let player;
+        let autoplay = true;
+        let randomShuffle = true;
+        let volume = 0;
+        let titlePosition = 'top';
+        let typewriterSpeed = 100;
+        let currentTitle = '';
+        let typewriterTimeout;
+        let dimming = 0;
+        
+        // YouTube API ready
+        function onYouTubeIframeAPIReady() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const playlistParam = urlParams.get('playlist');
+            const videoParam = urlParams.get('video');
+            const autoplayParam = urlParams.get('autoplay');
+            const randomParam = urlParams.get('random');
+            const volumeParam = urlParams.get('volume');
+            const titleParam = urlParams.get('title');
+            const dimmingParam = urlParams.get('dimming');
+            
+            // Set values from URL parameters
+            if (autoplayParam !== null) {
+                autoplay = autoplayParam === 'true';
+                document.getElementById('autoplayToggle').checked = autoplay;
+            }
+            if (randomParam !== null) {
+                randomShuffle = randomParam === 'true';
+                document.getElementById('randomToggle').checked = randomShuffle;
+            }
+            if (volumeParam !== null) {
+                volume = parseInt(volumeParam) || 0;
+                document.getElementById('volumeSlider').value = volume;
+                document.getElementById('volumeValue').textContent = volume;
+            }
+            if (titleParam !== null && ['disabled', 'top', 'bottom'].includes(titleParam)) {
+                titlePosition = titleParam;
+                document.getElementById('title' + titleParam.charAt(0).toUpperCase() + titleParam.slice(1)).checked = true;
+                // Update the title overlay position
+                const titleOverlay = document.getElementById('titleOverlay');
+                titleOverlay.className = `title-overlay ${titlePosition}`;
+            }
+            if (dimmingParam !== null) {
+                dimming = parseInt(dimmingParam) || 0;
+                document.getElementById('dimmingSlider').value = dimming;
+                document.getElementById('dimmingValue').textContent = dimming + '%';
+                updateDimming();
+            }
+            
+            player = new YT.Player('player', {
+                height: '100%',
+                width: '100%',
+                playerVars: {
+                    autoplay: autoplay ? 1 : 0,
+                    controls: 0,
+                    mute: 1,  // Start muted for autoplay compliance
+                    loop: 1,
+                    rel: 0,
+                    showinfo: 0,
+                    playlist: '', // Will be set dynamically
+                    listType: 'playlist'
+                },
+                events: {
+                    onReady: function(event) {
+                        console.log('Player ready');
+                        
+                        // Unmute and set volume after 1 second
+                        setTimeout(() => {
+                            if (player && player.unMute && player.setVolume) {
+                                player.unMute();
+                                player.setVolume(volume);  // Set to slider value (default 0)
+                            }
+                        }, 1000);
+                        
+                        // Load content from URL
+                        if (videoParam) {
+                            player.loadVideoById(videoParam);
+                            document.getElementById('videoId').value = videoParam;
+                            if (autoplay) {
+                                player.playVideo();
+                            }
+                        } else if (playlistParam) {
+                            player.loadPlaylist({
+                                list: playlistParam,
+                                listType: 'playlist',
+                                index: 0
+                            });
+                            document.getElementById('playlistId').value = playlistParam;
+                            if (autoplay) {
+                                setTimeout(() => player.playVideo(), 500);
+                            }
+                        } else {
+                            // Load default playlist
+                            loadPlaylist();
+                        }
+                        
+                        updateUrl();
+                    },
+                    onError: function(event) {
+                        console.error('YouTube error:', event.data);
+                        
+                        // Handle different YouTube error codes
+                        let errorMessage = '';
+                        switch(event.data) {
+                            case 2:
+                                errorMessage = 'Invalid video ID';
+                                break;
+                            case 5:
+                                errorMessage = 'HTML5 player error';
+                                break;
+                            case 100:
+                                errorMessage = 'Video not found or private';
+                                break;
+                            case 101:
+                            case 150:
+                                errorMessage = 'Video embedding restricted by owner';
+                                console.log('Skipping restricted video, trying next...');
+                                // Automatically skip to next video if shuffle is enabled
+                                if (randomShuffle) {
+                                    setTimeout(() => {
+                                        playRandomVideo();
+                                    }, 2000);
+                                }
+                                return; // Don't show alert for these errors
+                            default:
+                                errorMessage = 'Unknown error: ' + event.data;
+                        }
+                        
+                        console.log('YouTube Error:', errorMessage);
+                        // Only show alert for serious errors, not embedding restrictions
+                        if (event.data !== 101 && event.data !== 150) {
+                            alert('YouTube error: ' + errorMessage);
+                        }
+                    },
+                    onStateChange: function(event) {
+                        // When a video ends, play next random video if shuffle is enabled
+                        if (event.data === YT.PlayerState.ENDED && randomShuffle) {
+                            setTimeout(() => {
+                                playRandomVideo();
+                            }, 1000);
+                        }
+                        
+                        // Show title when video starts playing
+                        if (event.data === YT.PlayerState.PLAYING) {
+                            showVideoTitle();
+                        }
+                    }
+                }
+            });
+        }
+        
+        function loadPlaylist() {
+            const playlistId = document.getElementById('playlistId').value;
+            if (playlistId && player) {
+                const startIndex = randomShuffle ? Math.floor(Math.random() * 50) : 0;
+                player.loadPlaylist({
+                    list: playlistId,
+                    listType: 'playlist',
+                    index: startIndex
+                });
+                document.getElementById('videoId').value = '';
+                if (autoplay) {
+                    setTimeout(() => player.playVideo(), 500);
+                }
+                updateUrl();
+            }
+        }
+        
+        function loadVideo() {
+            const videoId = document.getElementById('videoId').value;
+            if (videoId && player) {
+                player.loadVideoById(videoId);
+                document.getElementById('playlistId').value = '';
+                if (autoplay) {
+                    player.playVideo();
+                }
+                updateUrl();
+            }
+        }
+        
+        function updateUrl() {
+            const playlistId = document.getElementById('playlistId').value;
+            const videoId = document.getElementById('videoId').value;
+            const baseUrl = window.location.origin + window.location.pathname;
+            
+            let params = new URLSearchParams();
+            
+            if (videoId) {
+                params.set('video', videoId);
+            } else if (playlistId) {
+                params.set('playlist', playlistId);
+            }
+            
+            // Add autoplay and random settings to URL
+            if (!autoplay) {
+                params.set('autoplay', 'false');
+            }
+            if (!randomShuffle) {
+                params.set('random', 'false');
+            }
+            if (volume !== 0) {
+                params.set('volume', volume.toString());
+            }
+            if (titlePosition !== 'top') {
+                params.set('title', titlePosition);
+            }
+            if (dimming !== 0) {
+                params.set('dimming', dimming.toString());
+            }
+            
+            let url = baseUrl;
+            if (params.toString()) {
+                url += '?' + params.toString();
+            }
+            
+            document.getElementById('urlOutput').value = url;
+        }
+        
+        function copyUrl() {
+            const urlField = document.getElementById('urlOutput');
+            urlField.select();
+            document.execCommand('copy');
+            alert('URL copied!');
+        }
+        
+        function toggleControls() {
+            const panel = document.getElementById('controlPanel');
+            panel.classList.toggle('show');
+        }
+        
+        function playRandomVideo() {
+            if (player && typeof player.nextVideo === 'function') {
+                // Use nextVideo which should pick randomly with shuffle enabled
+                player.nextVideo();
+            }
+        }
+        
+        // Typewriter effect functions
+        function showVideoTitle() {
+            if (titlePosition === 'disabled') {
+                hideTitle();
+                return;
+            }
+            
+            // Get video title from YouTube API
+            if (player && typeof player.getVideoData === 'function') {
+                const videoData = player.getVideoData();
+                if (videoData && videoData.title) {
+                    currentTitle = videoData.title;
+                    startTypewriter();
+                }
+            }
+        }
+        
+        function startTypewriter() {
+            const titleOverlay = document.getElementById('titleOverlay');
+            const titleText = document.getElementById('titleText');
+            
+            if (!currentTitle) return;
+            
+            // Clear any existing animation
+            if (typewriterTimeout) {
+                clearTimeout(typewriterTimeout);
+            }
+            
+            // Reset text
+            titleText.textContent = '';
+            
+            // Set position
+            titleOverlay.className = `title-overlay ${titlePosition}`;
+            titleOverlay.classList.add('show');
+            
+            // Start typing animation
+            let charIndex = 0;
+            function typeChar() {
+                if (charIndex < currentTitle.length) {
+                    titleText.textContent += currentTitle.charAt(charIndex);
+                    charIndex++;
+                    typewriterTimeout = setTimeout(typeChar, typewriterSpeed);
+                } else {
+                    // Hide title after 5 seconds
+                    typewriterTimeout = setTimeout(hideTitle, 5000);
+                }
+            }
+            
+            typeChar();
+        }
+        
+        function hideTitle() {
+            const titleOverlay = document.getElementById('titleOverlay');
+            titleOverlay.classList.remove('show');
+            if (typewriterTimeout) {
+                clearTimeout(typewriterTimeout);
+            }
+        }
+        
+        // Dimming overlay functions
+        function updateDimming() {
+            const overlay = document.getElementById('dimmingOverlay');
+            const opacity = dimming / 100;
+            overlay.style.backgroundColor = `rgba(0, 0, 0, ${opacity})`;
+        }
+        
+        // Update settings when checkboxes change
+        document.getElementById('autoplayToggle').addEventListener('change', function() {
+            autoplay = this.checked;
+            updateUrl();
+        });
+        
+        document.getElementById('randomToggle').addEventListener('change', function() {
+            randomShuffle = this.checked;
+            updateUrl();
+        });
+        
+        // Volume slider controls
+        document.getElementById('volumeSlider').addEventListener('input', function() {
+            volume = parseInt(this.value);
+            document.getElementById('volumeValue').textContent = volume;
+            if (player && typeof player.setVolume === 'function') {
+                player.setVolume(volume);
+            }
+            updateUrl();
+        });
+        
+        // Title position radio button controls
+        document.querySelectorAll('input[name="titlePosition"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.checked) {
+                    titlePosition = this.value;
+                    updateUrl();
+                    
+                    // If currently playing, update title display
+                    if (player && player.getPlayerState() === YT.PlayerState.PLAYING) {
+                        showVideoTitle();
+                    }
+                }
+            });
+        });
+        
+        // Dimming slider controls
+        document.getElementById('dimmingSlider').addEventListener('input', function() {
+            dimming = parseInt(this.value);
+            document.getElementById('dimmingValue').textContent = dimming + '%';
+            updateDimming();
+            updateUrl();
+        });
+        
+        // Update URL when inputs change
+        document.getElementById('playlistId').addEventListener('input', updateUrl);
+        document.getElementById('videoId').addEventListener('input', updateUrl);
+    </script>
+    
+    <script src="https://www.youtube.com/iframe_api"></script>
+</body>
+</html>
